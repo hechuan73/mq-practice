@@ -1,0 +1,34 @@
+version: '2'
+services:
+  namesrv:
+    image: apacherocketmq/rocketmq:4.5.0
+    container_name: rmqnamesrv
+    ports:
+      - 9876:9876
+    volumes:
+      - ./data/namesrv/logs:/Users/hechuan/mq_practice/data/namesrv/logs
+    command: sh mqnamesrv
+  broker:
+    image: apacherocketmq/rocketmq:4.5.0
+    container_name: rmqbroker
+    ports:
+      - 10909:10909
+      - 10911:10911
+      - 10912:10912
+    volumes:
+      - ./data/broker/logs:/Users/hechuan/mq_practice/data/broker/logs
+      - ./data/broker/store:/Users/hechuan/mq_practice/data/broker/store
+      - ./data/broker/conf/broker.conf:/Users/hechuan/mq_practice/data/broker/conf/broker.conf
+    command: sh mqbroker -n namesrv:9876 -c /Users/hechuan/mq_practice/data/broker/conf/broker.conf autoCreateTopicEnable=true
+    depends_on:
+      - namesrv
+  console:
+    image: styletang/rocketmq-console-ng
+    container_name: rocketmq-console-ng
+    ports:
+      - 8087:8080
+    depends_on:
+      - namesrv
+    environment:
+      - JAVA_OPTS= -Dlogging.level.root=info   -Drocketmq.namesrv.addr=rmqnamesrv:9876
+      - Dcom.rocketmq.sendMessageWithVIPChannel=false
